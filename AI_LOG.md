@@ -87,7 +87,7 @@ con los criterios de evaluación fue convincente.
 
 ## Fase 2 — Desarrollo con Cursor
 
-### Herramienta: Cursor (Claude Sonnet 4.5)
+### Herramienta: Cursor (Claude Opus 4.6 y Sonnet 4.5)
 
 ---
 
@@ -145,5 +145,70 @@ intentar la migración, mucho más difícil de diagnosticar.
 ### Errores comunes a anticipar y documentar cuando ocurran
 
 - Mapbox importado sin `dynamic` + `ssr: false` → rompe en SSR
-- OpenRouteService: confundir endpoint de directions con el de optimization
+- OpenRouteService: confundir endpoint de directions con el de optimization ← **resuelto en Bloque 2**
 - `navigator.geolocation` llamado en Server Component → mover a Client Component
+
+---
+
+## Bloque 2 — API
+
+### Herramienta: Cursor (Sonnet 4.6)
+
+---
+
+### Bloque 2, Decisión 1 — Orden de coordenadas en OpenRouteService
+
+**Contexto:** OpenRouteService usa el estándar GeoJSON, que define las coordenadas como
+`[longitude, latitude]` — el orden inverso a como los humanos (y Prisma/la DB) los almacenan
+(`lat`, `lng`).
+
+**Lo que hizo el modelo:** Lo implementó correctamente desde el primer intento en `lib/openroute.ts`,
+usando `[stop.lng, stop.lat]` en el campo `location` de cada job y en el `start` del vehículo.
+
+**Por qué lo documento:** Es uno de los errores más frecuentes con APIs de mapas y que estaba
+anticipado en la sección de errores de esta bitácora. El hecho de que el modelo lo manejara
+correctamente sin necesidad de corrección habla bien del contexto que se le dio (CONTEXT.md
+especifica explícitamente el endpoint a usar). Lo verificaré al probar el endpoint POST /optimize.
+
+---
+
+### Bloque 2, Decisión 2 — Atomicidad en PATCH /stops/[id]/status con $transaction
+
+**Decisión del modelo:** Envolver la actualización del Stop y el upsert/delete del Incident
+en una transacción Prisma (`prisma.$transaction`).
+
+**Seguí la sugerencia.** La razón es correcta: si el update del Stop tiene éxito pero el
+upsert del Incident falla (o viceversa), la DB queda en un estado inconsistente — una parada
+marcada como INCIDENT sin Incident, o un Incident huérfano. La transacción garantiza que
+ambas operaciones ocurren juntas o ninguna ocurre.
+
+**Detalle adicional:** Se implementó también la limpieza del Incident cuando el status cambia
+de INCIDENT a otro valor (`deleteMany` dentro de la transacción). Esto no estaba en el
+enunciado original pero es el comportamiento correcto — si el técnico corrige un error,
+el incidente no debe quedar colgado.
+
+---
+
+### Bloque 2, Decisión 3 — Estrategia en POST /optimize: deleteMany + createMany vs update individual
+
+**Contexto:** Al llamar POST /optimize con nuevas paradas (o re-optimizar), hay que decidir
+cómo manejar las paradas existentes de la ruta en la DB.
+
+**Opciones consideradas:**
+1. `deleteMany` todas las paradas existentes y `createMany` las nuevas — más simple
+2. Actualizar cada parada existente con su nuevo `order` — más conservador con los IDs
+
+**Decisión del modelo: opción 1 (deleteMany + createMany).** Lo validé: para el alcance
+del reto, donde POST /optimize se llama al inicio del día para crear la ruta, no hay paradas
+con estado `COMPLETED` o `INCIDENT` que valga la pena conservar. Si en el futuro se quisiera
+re-optimizar una ruta en progreso, habría que revisar esta decisión.
+
+**Seguí la sugerencia** porque la simplicidad supera el riesgo en el contexto actual.
+
+---
+
+### Bloque 2, Resultado de pruebas
+
+- `GET /api/routes/today` → ✅ Probado y funcionando. Devuelve ruta con 5 paradas ordenadas e Incidents incluidos.
+- `PATCH /api/stops/[id]/status` → ✅ Probado con COMPLETED y con INCIDENT (description obligatoria validada).
+- `POST /api/routes/optimize` → ⏳ Pendiente de probar con OPENROUTESERVICE_KEY activa.

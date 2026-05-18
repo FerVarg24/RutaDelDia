@@ -33,13 +33,13 @@ cambiando `[ ]` por `[x]`. No marques tareas que no estén completadas y funcion
  
 ## Bloque 3 — UI: lista de paradas (~60 min)
  
-- [ ] Crear componente `StopCard.tsx` con nombre, dirección y badge de estado
-- [ ] Colores por estado: PENDING=gris, COMPLETED=verde, INCIDENT=rojo, SKIPPED=amarillo
-- [ ] Crear página `/day` que fetchea GET /api/routes/today y muestra lista ordenada
-- [ ] Estado de carga (skeleton o spinner) mientras fetchea
-- [ ] Estado vacío si no hay ruta del día
-- [ ] Navegar a `/stop/[id]` al tocar una tarjeta
-- [ ] Botón o tab para ir a la vista de mapa
+- [x] Crear componente `StopCard.tsx` con nombre, dirección y badge de estado
+- [x] Colores por estado: PENDING=gris, COMPLETED=verde, INCIDENT=rojo, SKIPPED=amarillo
+- [x] Crear página `/day` que fetchea GET /api/routes/today y muestra lista ordenada
+- [x] Estado de carga (skeleton o spinner) mientras fetchea
+- [x] Estado vacío si no hay ruta del día
+- [x] Navegar a `/stop/[id]` al tocar una tarjeta
+- [x] Botón o tab para ir a la vista de mapa
 ---
  
 ## Bloque 4 — UI: mapa interactivo (~60 min)
@@ -106,7 +106,7 @@ cambiando `[ ]` por `[x]`. No marques tareas que no estén completadas y funcion
 |---|---|
 | 1 — Setup inicial | ✅ Completado |
 | 2 — API | 🔄 En progreso (5/6 — falta prueba manual de endpoints) |
-| 3 — UI: lista de paradas | ⬜ Pendiente |
+| 3 — UI: lista de paradas | ✅ Completado |
 | 4 — UI: mapa | ⬜ Pendiente |
 | 5 — UI: detalle de parada | ⬜ Pendiente |
 | 6 — Geofencing (stretch) | ⬜ Pendiente |

@@ -145,12 +145,12 @@ npm run dev
 
 ## Funcionalidad mínima (obligatoria)
 
-- [ ] Endpoint que recibe paradas y devuelve ruta optimizada
-- [ ] Persistencia de estado por parada (PENDING / COMPLETED / INCIDENT / SKIPPED)
-- [ ] Lista de paradas en orden optimizado
+- [x] Endpoint que recibe paradas y devuelve ruta optimizada
+- [x] Persistencia de estado por parada (PENDING / COMPLETED / INCIDENT / SKIPPED)
+- [x] Lista de paradas en orden optimizado
 - [ ] Mapa con ruta y paradas numeradas
 - [ ] Detalle de parada con botones de estado y campo de notas
-- [ ] Nota obligatoria al marcar "con incidente"
+- [x] Nota obligatoria al marcar "con incidente"
 
 ## Stretch goals (opcionales)
 
