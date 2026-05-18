@@ -4,9 +4,19 @@
 
 El producto real detrás del reto es **Camino x Ops**: plataforma de gestión de servicio en campo para coordinar técnicos, rutas optimizadas, check-ins verificados por ubicación, captura de evidencia y monitoreo en tiempo real desde una vista de Ops Manager.
 
-```
-Next.js 14   ·   TypeScript   ·   Tailwind CSS   ·   Prisma 5   ·   PostgreSQL 16   ·   Mapbox GL JS
-```
+<br/>
+
+![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-5-2D3748?style=flat-square&logo=prisma&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![Mapbox](https://img.shields.io/badge/Mapbox_GL_JS-3-000000?style=flat-square&logo=mapbox&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-compose-2496ED?style=flat-square&logo=docker&logoColor=white)
+
+![Estado](https://img.shields.io/badge/estado-funcional-22c55e?style=flat-square)
+![Stretch goals](https://img.shields.io/badge/stretch_goals-3%2F4%20completados-3b82f6?style=flat-square)
+![Demo mode](https://img.shields.io/badge/demo_mode-disponible-f59e0b?style=flat-square)
 
 ---
 
@@ -87,7 +97,7 @@ El seed carga **9 paradas reales en CDMX** para dos técnicos:
 | `tech-001` | Polanco → Roma Norte → Condesa → Del Valle → Coyoacán |
 | `tech-002` | Reforma → Centro Histórico → Santa Fe → Nápoles |
 
-El seed es **idempotente**: correrlo varias veces no duplica datos. Usa `upsert` para la ruta y `findFirst` antes de crear cada parada.
+> El seed es **idempotente**: correrlo varias veces no duplica datos. Usa `upsert` para la ruta y `findFirst` antes de crear cada parada.
 
 ### 4. Correr la app
 
@@ -95,7 +105,7 @@ El seed es **idempotente**: correrlo varias veces no duplica datos. Usa `upsert`
 npm run dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000) — redirige automáticamente a `/day`.
+Abre **[http://localhost:3000](http://localhost:3000)** — redirige automáticamente a `/day`.
 
 ### Verificar datos con Prisma Studio (opcional)
 
@@ -113,15 +123,15 @@ Abre una interfaz visual en [http://localhost:5555](http://localhost:5555) para 
 |---|---|---|---|
 | `/` | — | — | Redirect automático a `/day` |
 | `/day` | Lista de paradas | Técnico | Paradas del día en orden optimizado con badges de estado. Contador de progreso en el header. |
-| `/day/map` | Mapa interactivo | Técnico | Mapa Mapbox con la ruta trazada, markers numerados, botón de geolocalización y botón "siguiente parada" que hace flyTo a la primera parada pendiente. |
-| `/stop/[id]` | Detalle de parada | Técnico | Nombre, dirección, distancia actual al punto. Botones para marcar Completada / Con incidente / Omitida. Campo de notas. Captura de foto de evidencia. El check-in requiere estar a menos de 100m (o `DEMO_MODE=true`). |
-| `/ops` | Dashboard de operaciones | Ops Manager | Vista desktop-first. Contadores globales (pendientes / completadas / incidentes / omitidas). Tabla por técnico con estado de cada parada, hora de check-in y notas. Se actualiza automáticamente cada 10 segundos con indicador de "Actualizando en vivo". |
+| `/day/map` | Mapa interactivo | Técnico | Mapa Mapbox con la ruta trazada, markers numerados, botón de geolocalización y botón "siguiente parada" que hace `flyTo` a la primera parada pendiente. |
+| `/stop/[id]` | Detalle de parada | Técnico | Nombre, dirección, distancia actual al punto. Botones Completada / Con incidente / Omitida. Campo de notas. Captura de foto de evidencia. El check-in requiere estar a menos de 100m (o `DEMO_MODE=true`). |
+| `/ops` | Dashboard de operaciones | Ops Manager | Vista desktop-first. Contadores globales por estado. Tabla por técnico con estado de cada parada, hora de check-in y notas. Polling automático cada 10 segundos con indicador live. |
 
 ---
 
 ## Cómo probar cada flujo
 
-### Flujo del técnico (vista móvil recomendada)
+### Flujo del técnico _(vista móvil recomendada)_
 
 1. Abre `/day` — verás la lista de 5 paradas de `tech-001` en orden.
 2. Toca cualquier tarjeta para ir al detalle de esa parada.
@@ -130,14 +140,14 @@ Abre una interfaz visual en [http://localhost:5555](http://localhost:5555) para 
 5. Sube una foto (en móvil activa la cámara trasera; en escritorio abre el selector de archivos).
 6. Pulsa **Guardar y continuar** — regresa a `/day` con el estado actualizado.
 7. Prueba también **Con incidente**: el campo de descripción es obligatorio, no puedes guardar sin escribir algo.
-8. Ve a `/day/map` — verás la ruta trazada. Las paradas ya completadas siguen apareciendo con su marcador numerado. El botón flotante apunta a la siguiente parada pendiente.
+8. Ve a `/day/map` — verás la ruta trazada. El botón flotante apunta a la siguiente parada pendiente.
 
 ### Flujo del Ops Manager
 
 1. Abre `/ops` directamente, o pulsa el botón **Ops** en el header de `/day`.
 2. Verás los contadores globales y la tabla con los dos técnicos.
 3. A medida que el técnico actualiza paradas desde `/stop/[id]`, el dashboard se refresca solo cada 10 segundos.
-4. El punto verde en el header pulsa mientras la conexión está activa. Si el servidor no responde, cambia a ámbar y muestra los últimos datos conocidos.
+4. El punto verde pulsa mientras la conexión está activa. Si el servidor no responde, cambia a ámbar y mantiene los últimos datos conocidos.
 
 ### Resetear estados para volver a probar
 
@@ -157,13 +167,23 @@ npx prisma db seed
 
 ## Referencia de API
 
-Todos los endpoints devuelven JSON. Los errores siguen el formato `{ "error": "descripción" }`.
+Todos los endpoints devuelven `application/json`. Los errores siguen el formato `{ "error": "descripción" }`.
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| `GET` | `/api/routes/today` | Ruta del día de `tech-001` con paradas e incidentes |
+| `POST` | `/api/routes/optimize` | Optimiza el orden de paradas via ORS y persiste la ruta |
+| `PATCH` | `/api/stops/[id]/status` | Actualiza estado, notas y `checkedInAt` de una parada |
+| `POST` | `/api/stops/[id]/photo` | Recibe imagen, guarda en disco y actualiza `photoUrl` |
+| `GET` | `/api/ops/summary` | Todas las rutas del día con contadores globales |
+
+---
 
 ### `GET /api/routes/today`
 
-Devuelve la ruta del día para `tech-001` (técnico hardcodeado para el demo) con todas sus paradas ordenadas e incidentes incluidos.
+Devuelve la ruta del día para `tech-001` con todas sus paradas ordenadas e incidentes incluidos.
 
-**Respuesta exitosa (200):**
+**Respuesta exitosa `200`:**
 ```json
 {
   "route": {
@@ -189,7 +209,7 @@ Devuelve la ruta del día para `tech-001` (técnico hardcodeado para el demo) co
 }
 ```
 
-**404** si no hay ruta asignada para hoy.
+`404` si no hay ruta asignada para hoy.
 
 ```bash
 curl http://localhost:3000/api/routes/today
@@ -199,9 +219,9 @@ curl http://localhost:3000/api/routes/today
 
 ### `PATCH /api/stops/[id]/status`
 
-Actualiza el estado de una parada. Al cambiar a `COMPLETED` o `SKIPPED`, registra `checkedInAt` con el timestamp actual.
+Actualiza el estado de una parada. Al cambiar a `COMPLETED` o `SKIPPED`, registra `checkedInAt` con el timestamp actual. Operación atómica con `prisma.$transaction`.
 
-**Body:**
+**Body para `COMPLETED` o `SKIPPED`:**
 ```json
 {
   "status": "COMPLETED",
@@ -209,7 +229,7 @@ Actualiza el estado de una parada. Al cambiar a `COMPLETED` o `SKIPPED`, registr
 }
 ```
 
-Para `INCIDENT`, el campo `description` es obligatorio:
+**Body para `INCIDENT`** — `description` es obligatorio:
 ```json
 {
   "status": "INCIDENT",
@@ -218,9 +238,7 @@ Para `INCIDENT`, el campo `description` es obligatorio:
 }
 ```
 
-**Respuesta exitosa (200):** el objeto `stop` actualizado.
-
-**400** si `status` es `INCIDENT` y falta `description`.
+`200` con el objeto `stop` actualizado. `400` si `status` es `INCIDENT` y falta `description`.
 
 ```bash
 curl -X PATCH http://localhost:3000/api/stops/STOP_ID/status \
@@ -232,7 +250,7 @@ curl -X PATCH http://localhost:3000/api/stops/STOP_ID/status \
 
 ### `POST /api/routes/optimize`
 
-Recibe un array de paradas, llama a OpenRouteService VRP para optimizar el orden, persiste la ruta y devuelve las paradas reordenadas.
+Recibe un array de paradas, llama al endpoint VRP de OpenRouteService para optimizar el orden, persiste la ruta en la base de datos y devuelve las paradas reordenadas.
 
 **Body:**
 ```json
@@ -245,17 +263,13 @@ Recibe un array de paradas, llama a OpenRouteService VRP para optimizar el orden
 }
 ```
 
-**Respuesta exitosa (200):** la ruta con paradas en el orden optimizado por ORS.
-
-> Requiere `OPENROUTESERVICE_KEY` válida en `.env`. Si la key está vacía, el endpoint devuelve 500.
+> Requiere `OPENROUTESERVICE_KEY` válida en `.env`. Sin ella el endpoint devuelve `500`.
 
 ---
 
 ### `POST /api/stops/[id]/photo`
 
-Recibe una imagen (`multipart/form-data`, campo `photo`), la guarda en `public/uploads/` con nombre UUID y actualiza `photoUrl` en la base de datos.
-
-**Límite:** 5 MB. Solo acepta `image/*`.
+Recibe `multipart/form-data` con campo `photo`, valida que sea imagen y que no supere 5 MB, guarda en `public/uploads/` con nombre `crypto.randomUUID()` y actualiza `photoUrl` en la base de datos.
 
 ```bash
 curl -X POST http://localhost:3000/api/stops/STOP_ID/photo \
@@ -266,29 +280,15 @@ curl -X POST http://localhost:3000/api/stops/STOP_ID/photo \
 
 ### `GET /api/ops/summary`
 
-Devuelve todas las rutas del día de todos los técnicos con contadores globales.
+Devuelve todas las rutas del día de todos los técnicos con contadores calculados server-side.
 
-**Respuesta exitosa (200):**
+**Respuesta exitosa `200`:**
 ```json
 {
-  "summary": {
-    "total": 9,
-    "pending": 6,
-    "completed": 2,
-    "incident": 1,
-    "skipped": 0
-  },
+  "summary": { "total": 9, "pending": 6, "completed": 2, "incident": 1, "skipped": 0 },
   "routes": [
-    {
-      "id": "clx...",
-      "techId": "tech-001",
-      "stops": [ ... ]
-    },
-    {
-      "id": "clx...",
-      "techId": "tech-002",
-      "stops": [ ... ]
-    }
+    { "id": "clx...", "techId": "tech-001", "stops": [ ... ] },
+    { "id": "clx...", "techId": "tech-002", "stops": [ ... ] }
   ]
 }
 ```
@@ -299,13 +299,13 @@ Devuelve todas las rutas del día de todos los técnicos con contadores globales
 
 | Tecnología | Decisión | Razonamiento |
 |---|---|---|
-| Next.js 14 App Router | Framework principal | Full-stack en un solo repo. SSR mejora la carga inicial en móvil con conexión débil. |
-| TypeScript estricto | Lenguaje | Type safety de punta a punta: DB → API → UI. Errores que sin tipos solo aparecen en runtime. |
-| Tailwind CSS | Estilos | Desarrollo mobile-first natural. Tap targets de 48px mínimo y breakpoints sin cambiar de contexto. |
-| Prisma 5 | ORM | Schema como fuente de verdad, migraciones versionadas, tipos generados automáticamente. Fijado en v5 — Prisma 7 tiene breaking changes incompatibles con la sintaxis `url = env(...)`. |
-| PostgreSQL 16 (Docker) | Base de datos | Relacional por la naturaleza del dominio. Docker evita instalar nada y garantiza paridad dev/prod. |
-| Mapbox GL JS | Mapas | Visualmente superior a Leaflet. Tiles modernos, markers personalizables, `GeolocateControl` nativo. |
-| OpenRouteService | Optimización de rutas | Gratuito sin tarjeta de crédito. 500 req/día suficientes para el reto. Endpoint de VRP real (no solo directions). |
+| ![Next.js](https://img.shields.io/badge/Next.js_14-black?style=flat-square&logo=next.js&logoColor=white) | Framework principal | Full-stack en un solo repo. SSR mejora la carga inicial en móvil con conexión débil. |
+| ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white) | Lenguaje | Type safety de punta a punta: DB → API → UI. Errores que sin tipos solo aparecen en runtime. |
+| ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white) | Estilos | Desarrollo mobile-first natural. Tap targets de 48px mínimo y breakpoints sin cambiar de contexto. |
+| ![Prisma](https://img.shields.io/badge/Prisma_5-2D3748?style=flat-square&logo=prisma&logoColor=white) | ORM | Schema como fuente de verdad, migraciones versionadas, tipos generados automáticamente. Fijado en v5 — Prisma 7 tiene breaking changes incompatibles con `url = env(...)`. |
+| ![PostgreSQL](https://img.shields.io/badge/PostgreSQL_16-4169E1?style=flat-square&logo=postgresql&logoColor=white) | Base de datos | Relacional por la naturaleza del dominio. Docker evita instalar nada y garantiza paridad dev/prod. |
+| ![Mapbox](https://img.shields.io/badge/Mapbox_GL_JS-000000?style=flat-square&logo=mapbox&logoColor=white) | Mapas | Visualmente superior a Leaflet. Tiles modernos, markers personalizables, `GeolocateControl` nativo. |
+| ![ORS](https://img.shields.io/badge/OpenRouteService-009900?style=flat-square) | Optimización de rutas | Gratuito sin tarjeta de crédito. 500 req/día suficientes para el reto. Endpoint de VRP real (no solo directions). |
 
 ---
 
@@ -343,13 +343,13 @@ Devuelve todas las rutas del día de todos los técnicos con contadores globales
      └──────┬───────┘          └──────────────────────┘
             │
             ▼
-     ┌──────────────┐
-     │ PostgreSQL 16 │
-     │               │
-     │ Route         │
-     │   └─ Stop[]   │
-     │       └─ Incident? │
-     └──────────────┘
+     ┌────────────────┐
+     │ PostgreSQL 16  │
+     │                │
+     │ Route          │
+     │  └─ Stop[]     │
+     │      └─ Incident? │
+     └────────────────┘
 ```
 
 ### Estructura de carpetas
@@ -447,9 +447,9 @@ Incident ◄── (1:1 con Stop, máximo uno por parada)
 
 **Decisiones del schema:**
 - `@@unique([date, techId])` garantiza una sola ruta por técnico por día a nivel de base de datos, no solo en código.
-- `Incident` es una tabla separada de `Stop` para que pueda crecer independientemente (agregar fotos de incidente, severidad, etc.) sin modificar la tabla principal.
-- `checkedInAt` en `Stop` permite que el Ops Manager vea los tiempos reales de visita sin joins adicionales.
-- El PATCH de estado usa `prisma.$transaction` para que la actualización de `Stop` y el upsert/delete de `Incident` sean atómicos.
+- `Incident` es una tabla separada de `Stop` para que pueda crecer independientemente (severidad, fotos de incidente, etc.) sin tocar la tabla principal.
+- `checkedInAt` en `Stop` permite que el Ops Manager vea tiempos reales de visita sin joins adicionales.
+- El `PATCH` de estado usa `prisma.$transaction` para que la actualización de `Stop` y el upsert/delete de `Incident` sean atómicos.
 
 ---
 
@@ -466,34 +466,34 @@ Incident ◄── (1:1 con Stop, máximo uno por parada)
 
 ### Stretch goals
 
-- [x] **Geofencing:** botones de check-in activos solo a menos de 100m de la parada. Implementado con `navigator.geolocation` (`watchPosition`) + fórmula Haversine en `lib/geofence.ts`. Distancia actualizada en tiempo real.
-- [x] **Captura de foto:** `<input capture="environment">` activa la cámara trasera en móvil. Preview local antes del upload. Upload a `public/uploads/` con nombre UUID. Thumbnail visible en el detalle.
-- [x] **Ops Dashboard:** contadores globales + tabla agrupada por técnico + polling automático cada 10s + degradación grácil ante pérdida de conexión.
+- [x] **Geofencing:** botones activos solo a menos de 100m de la parada. `navigator.geolocation` (`watchPosition`) + Haversine en `lib/geofence.ts`. Distancia actualizada en tiempo real.
+- [x] **Captura de foto:** `<input capture="environment">` activa la cámara trasera en móvil. Preview local antes del upload. UUID como nombre de archivo.
+- [x] **Ops Dashboard:** contadores globales + tabla por técnico + polling cada 10s + degradación grácil ante pérdida de conexión.
 - [ ] Modo offline con sincronización posterior
 
 ---
 
 ## Qué dejé pendiente y qué haría con más tiempo
 
-**Seed e idempotencia de estados:**
+**Seed e idempotencia de estados**
 `prisma/seed.ts` crea paradas si no existen pero no resetea `status`, notas ni incidentes. Para volver a un estado limpio en desarrollo, usa Prisma Studio (`npx prisma studio`) o `npx prisma migrate reset && npx prisma db seed`.
 
-**Almacenamiento de fotos:**
+**Almacenamiento de fotos**
 Las imágenes se guardan en `public/uploads/` (disco local). En producción esto no escalaría: el filesystem no es compartido en entornos multi-instancia y los archivos se perderían en cada redeploy. La solución es reemplazar `fs.writeFile` por un `putObject` a S3 o Cloudflare R2 en el endpoint `POST /api/stops/[id]/photo` — es un cambio en un solo lugar.
 
-**Técnico hardcodeado:**
-`GET /api/routes/today` devuelve siempre la ruta de `tech-001`. En un sistema real, el técnico se identificaría con un token de sesión. Para el reto no se implementó auth porque agregaría fricción al setup del evaluador.
+**Técnico hardcodeado**
+`GET /api/routes/today` devuelve siempre la ruta de `tech-001`. En un sistema real, el técnico se identificaría con un token de sesión. No se implementó auth para no agregar fricción al setup del evaluador.
 
-**Roles y autenticación:**
-La app actual trata a técnico y Ops Manager como si fueran el mismo actor sin credenciales. En producción, son personas distintas con permisos distintos: el técnico solo debe ver y actualizar su propia ruta; el Ops Manager debe ver todas las rutas sin poder modificar estados. La arquitectura correcta separa estos roles con un sistema de autenticación (JWT o sesiones) y middleware de autorización en las API routes — `/ops` y `/api/ops/summary` deben estar protegidas para el rol de manager, y `/api/stops/[id]/status` debe validar que el técnico autenticado sea el dueño de esa parada.
+**Roles y autenticación**
+La app actual trata a técnico y Ops Manager como el mismo actor sin credenciales. En producción son personas distintas con permisos distintos: el técnico solo debe ver y actualizar su propia ruta; el Ops Manager debe ver todas las rutas sin poder modificar estados. La arquitectura correcta requiere autenticación (JWT o sesiones) y middleware de autorización en las API routes — `/ops` y `/api/ops/summary` protegidas para el rol de manager, y `/api/stops/[id]/status` validando que el técnico autenticado sea el dueño de esa parada.
 
-**Diseño UI/UX antes del código:**
+**Diseño UI/UX antes del código**
 Normalmente dedicaría tiempo a wireframes y diseño en Figma antes de escribir la primera línea de código: definir el flujo de pantallas, los estados de cada componente (vacío, cargando, error, éxito), los tap targets para uso con guantes o bajo el sol, y la paleta de colores. En este reto prioricé la funcionalidad por el enfoque del enunciado, y la interfaz quedó funcional pero no tan pulida como me gustaría en un producto real. Con más tiempo habría iterado sobre el flujo de check-in, mejorado los estados de transición y probado la pantalla con usuarios reales en condiciones de campo.
 
-**Modo offline:**
-Sin conexión, la app no funciona. El siguiente paso sería un Service Worker con cache de la ruta del día y cola de actualizaciones para sincronizar cuando vuelva la red.
+**Modo offline**
+Sin conexión la app no funciona. El siguiente paso sería un Service Worker con cache de la ruta del día y cola de actualizaciones para sincronizar cuando vuelva la red.
 
-**Consola:**
+**Consola**
 El navegador puede pedir `/manifest.json` (PWA). Si no existe en `public/`, verás un 404 en la consola. Es cosmético y no afecta la funcionalidad.
 
 ---
@@ -511,7 +511,7 @@ El enfoque no fue "generar y copiar" sino usar la IA para discutir decisiones de
 
 Los casos completos están documentados en [`AI_LOG.md`](./AI_LOG.md).
 
-**Criterio aplicado:** Si no entiendo por qué la IA genera algo, no lo acepto hasta entenderlo.
+> **Criterio aplicado:** Si no entiendo por qué la IA genera algo, no lo acepto hasta entenderlo.
 
 ---
 
