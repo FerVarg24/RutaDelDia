@@ -29,9 +29,10 @@ Edita `.env`:
 DATABASE_URL="postgresql://rutadeldia:rutadeldia@localhost:5432/rutadeldia"
 NEXT_PUBLIC_MAPBOX_TOKEN="pk.eyJ1..."   # tu token de Mapbox
 OPENROUTESERVICE_KEY="eyJ..."           # tu key de OpenRouteService
+NEXT_PUBLIC_DEMO_MODE=true              # desactiva geofencing para demos (quitar en producción)
 ```
 
-> **Por qué `NEXT_PUBLIC_`:** Mapbox GL JS se inicializa en el browser, no en el servidor. Next.js solo expone variables al cliente si tienen el prefijo `NEXT_PUBLIC_`. Sin él, el mapa no puede autenticarse.
+> **Por qué `NEXT_PUBLIC_`:** Mapbox GL JS se inicializa en el browser, no en el servidor. Next.js solo expone variables al cliente si tienen el prefijo `NEXT_PUBLIC_`. Sin él, el mapa no puede autenticarse. Lo mismo aplica a `NEXT_PUBLIC_DEMO_MODE`, que se lee en el cliente para decidir si bloquear los botones por distancia.
 
 ### Correr localmente
 
@@ -74,22 +75,6 @@ npx prisma studio
 | Mapbox GL JS | Mapas | Visualmente superior a Leaflet. Tiles modernos, modo oscuro nativo, markers personalizables. |
 | OpenRouteService | Optimización de rutas | Gratuito sin tarjeta de crédito. 500 req/día suficientes para el reto. Endpoint de VRP real. |
 
-### Decisiones donde cuestioné a la IA
-
-Estas son las decisiones donde la sugerencia inicial del modelo no fue la mejor y la rechacé o modifiqué. Detalle completo en [`AI_LOG.md`](./AI_LOG.md).
-
-**1. Mapbox sobre Leaflet**
-El modelo priorizó "evitar fricción de setup" y sugirió Leaflet + OpenStreetMap. Elegí Mapbox porque el impacto visual forma parte de la evaluación: AROMARIA evalúa que pensé en el usuario final, no solo en que el código funcione.
-
-**2. Postgres desde el día uno, no SQLite**
-El modelo sugirió SQLite en dev para reducir dependencias. Con Docker disponible, la complejidad extra es un solo comando. Usar el mismo motor en dev y prod elimina una clase entera de bugs relacionados con tipos de datos y comportamientos de la DB.
-
-**3. Prisma 5, no Prisma 7**
-Al instalar `prisma` sin pinear versión, npm instaló Prisma 7.8.0, que tiene un breaking change: elimina `url = env("DATABASE_URL")` del schema. El schema definido usa esa sintaxis. Detecté el error al correr `prisma validate` y fijé la versión en `^5`. Prisma 7 requeriría `prisma.config.ts` y cambiar el schema — innecesario para el alcance del reto.
-
-**4. `NEXT_PUBLIC_MAPBOX_TOKEN`, no `MAPBOX_TOKEN`**
-El prompt original decía `MAPBOX_TOKEN`. Sin el prefijo `NEXT_PUBLIC_`, Next.js no expone la variable al browser y Mapbox no puede inicializarse. Corrección silenciosa que habría tardado tiempo en debuggear.
-
 ---
 
 ## Arquitectura
@@ -100,7 +85,7 @@ El prompt original decía `MAPBOX_TOKEN`. Sin el prefijo `NEXT_PUBLIC_`, Next.js
        ▼
 [Next.js 14 — App Router]
   /day              → Lista de paradas ordenadas
-  /day/map          → Mapa con ruta trazada
+  /day/map          → Mapa con ruta trazada, GeolocateControl y botón a siguiente parada pendiente
   /stop/[id]        → Detalle + cambio de estado + notas
   /ops              → Dashboard Ops Manager (stretch)
        │
@@ -132,16 +117,20 @@ El prompt original decía `MAPBOX_TOKEN`. Sin el prefijo `NEXT_PUBLIC_`, Next.js
 │   └── api/
 │       ├── routes/optimize/route.ts
 │       ├── routes/today/route.ts
-│       └── stops/[id]/status/route.ts
+│       ├── stops/[id]/status/route.ts
+│       └── stops/[id]/photo/route.ts   # sube imagen, actualiza photoUrl
 ├── components/
 │   ├── StopCard.tsx
 │   ├── MapView.tsx                 # siempre dynamic import, ssr: false
 │   ├── StatusButtons.tsx
-│   └── IncidentForm.tsx
+│   ├── IncidentForm.tsx
+│   └── PhotoCapture.tsx            # input cámara + preview + upload
 ├── lib/
 │   ├── prisma.ts                   # singleton PrismaClient
 │   ├── openroute.ts                # cliente OpenRouteService
 │   └── geofence.ts                 # fórmula Haversine (stretch)
+├── public/
+│   └── uploads/                    # fotos de evidencia (no versionadas en git)
 └── prisma/
     ├── schema.prisma
     └── seed.ts                     # 5 paradas reales en CDMX
@@ -153,17 +142,17 @@ El prompt original decía `MAPBOX_TOKEN`. Sin el prefijo `NEXT_PUBLIC_`, Next.js
 
 ### Mínima (obligatoria)
 
-- [ ] Endpoint que recibe paradas y devuelve ruta optimizada por ORS
-- [ ] Persistencia de estado por parada (PENDING / COMPLETED / INCIDENT / SKIPPED)
-- [ ] Lista de paradas en orden optimizado
-- [ ] Mapa con ruta trazada y paradas numeradas
-- [ ] Detalle de parada con botones de estado y campo de notas
-- [ ] Nota obligatoria al marcar estado INCIDENT
+- [x] Endpoint que recibe paradas y devuelve ruta optimizada por ORS
+- [x] Persistencia de estado por parada (PENDING / COMPLETED / INCIDENT / SKIPPED)
+- [x] Lista de paradas en orden optimizado
+- [x] Mapa con ruta trazada y paradas numeradas; ubicación del usuario (Mapbox Geolocate); salto a primera parada pendiente
+- [x] Detalle de parada con botones de estado y campo de notas
+- [x] Nota obligatoria al marcar estado INCIDENT
 
 ### Stretch goals
 
-- [ ] Geofencing: botones activos solo a menos de 100m de la parada
-- [ ] Captura de foto como evidencia de visita
+- [x] Geofencing: botones activos solo a menos de 100m de la parada (Haversine + geolocalización en el cliente)
+- [x] Captura de foto como evidencia de visita (`capture="environment"`, preview local, upload a `/public/uploads/`)
 - [ ] Ops Dashboard con estado en tiempo real (polling cada 10s)
 - [ ] Modo offline con sincronización posterior
 
@@ -173,24 +162,13 @@ El prompt original decía `MAPBOX_TOKEN`. Sin el prefijo `NEXT_PUBLIC_`, Next.js
 
 > Esta sección se actualiza honestamente al avanzar el proyecto.
 
-### Estado actual
+- **Seed:** `prisma/seed.ts` crea paradas si no existen pero no resetea `status` ni incidentes. Para volver a probar flujos con todo en `PENDING`, usa [Prisma Studio](https://www.prisma.io/studio) (`npx prisma studio`) o borra datos y vuelve a migrar/seedear en entorno local.
+- **Demo Mode:** `NEXT_PUBLIC_DEMO_MODE=true` en `.env` desactiva el bloqueo por distancia del geofencing, útil para demos y desarrollo. Los banners de distancia siguen apareciendo de forma informativa. Para producción real, esta variable debe eliminarse o ponerse en `false`.
+- **Almacenamiento de fotos:** las imágenes se guardan en `public/uploads/` (disco local). Para producción se debería migrar a un servicio de objeto como S3 o Cloudflare R2; el endpoint `POST /api/stops/[id]/photo` es el único punto a cambiar.
+- **Stretch sin hacer:** Ops dashboard, modo offline (ver ROADMAP Bloques 8–9).
+- **Consola:** peticiones a `/manifest.json` pueden devolver 404 si no hay manifest en `public/`; es cosmético y no afecta la app.
 
-El proyecto tiene el setup completo (Bloque 1): scaffolding Next.js 14, schema de Prisma validado, seed con datos reales en CDMX, Docker Compose, singleton de Prisma. La API, la UI y los stretch goals están por construirse.
-
-### Qué haría con más tiempo
-
-- **Autenticación real por técnico.** Actualmente el `techId` es hardcodeado como `"tech-001"`. En producción, cada técnico tendría sesión propia y solo vería su ruta.
-- **Optimistic updates en la UI.** Al cambiar el estado de una parada, la UI debería reflejar el cambio de inmediato sin esperar la respuesta del servidor.
-- **Push notifications.** Cuando el Ops Manager asigna una parada nueva o cambia el orden, el técnico debería recibir una notificación sin tener que recargar la app.
-- **PWA completa con Service Worker.** El modo offline del roadmap es la funcionalidad que más valor da en campo — zonas sin cobertura son comunes.
-- **Tests de integración.** Los endpoints son candidatos naturales para tests con Playwright o Vitest + msw.
-- **Rate limiting en la API.** `POST /api/routes/optimize` llama a un servicio externo — sin límite podría agotarse el cupo gratuito de ORS.
-
----
-
-## Colaboración con IA
-
-Este proyecto fue desarrollado con Cursor (Claude Sonnet 4.5) como copiloto.
+Este proyecto fue desarrollado con Cursor como copiloto.
 
 El enfoque no fue "generar y copiar", sino usar la IA para discutir decisiones, detectar errores y avanzar más rápido — mientras mantengo criterio sobre qué aceptar. Los casos donde cuestioné o rechacé las sugerencias están documentados en [`AI_LOG.md`](./AI_LOG.md).
 
@@ -203,4 +181,4 @@ El enfoque no fue "generar y copiar", sino usar la IA para discutir decisiones, 
 - [x] Repositorio en GitHub (público)
 - [x] README con instrucciones, decisiones técnicas y pendientes ← este archivo
 - [ ] Video 5-10 min (Loom): app funcionando + arquitectura + uso de IA
-- [ ] AI_LOG.md completo con fase de desarrollo
+- [x] AI_LOG.md actualizado con fases y decisiones relevantes (incl. mapa y geofencing)

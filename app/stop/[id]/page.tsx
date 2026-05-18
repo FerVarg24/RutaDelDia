@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import StatusButtons from './components/StatusButtons'
 import IncidentForm from './components/IncidentForm'
+import PhotoCapture from './components/PhotoCapture'
 import { useGeolocation } from './hooks/useGeolocation'
 import { haversineDistance, formatDistance, GEOFENCE_RADIUS } from '@/lib/geofence'
 import type { StopData, StopStatus, RouteData } from '@/app/day/types'
@@ -207,10 +208,13 @@ export default function StopPage({ params }: StopPageProps) {
       ? haversineDistance(coords.lat, coords.lng, stop.lat, stop.lng)
       : null
 
+  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+
   const geoBlocked =
-    geoLoading ||
-    geoError !== null ||
-    (distance !== null && distance > GEOFENCE_RADIUS)
+    !isDemoMode &&
+    (geoLoading ||
+      geoError !== null ||
+      (distance !== null && distance > GEOFENCE_RADIUS))
 
   const isConfirmDisabled =
     !selectedStatus ||
@@ -291,6 +295,18 @@ export default function StopPage({ params }: StopPageProps) {
               Check-in registrado a las {formatTime(stop.checkedInAt)}
             </p>
           )}
+
+          {stop.photoUrl && stop.status === 'COMPLETED' && (
+            <div className="mt-3">
+              <p className="text-xs text-gray-400 mb-1.5">Foto de evidencia</p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={stop.photoUrl}
+                alt="Evidencia de la visita"
+                className="w-full h-40 object-cover rounded-xl border border-gray-100"
+              />
+            </div>
+          )}
         </div>
 
         {/* Bloque de estado GPS / distancia */}
@@ -338,6 +354,13 @@ export default function StopPage({ params }: StopPageProps) {
               placeholder="Agrega observaciones si lo deseas..."
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors"
             />
+          </div>
+        )}
+
+        {/* Foto de evidencia — solo al marcar COMPLETED */}
+        {selectedStatus === 'COMPLETED' && (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-4">
+            <PhotoCapture stopId={id} existingPhotoUrl={stop.photoUrl} />
           </div>
         )}
       </main>

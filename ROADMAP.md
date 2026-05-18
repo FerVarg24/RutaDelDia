@@ -50,6 +50,9 @@ cambiando `[ ]` por `[x]`. No marques tareas que no estén completadas y funcion
 - [x] Centrar y ajustar el zoom automáticamente para mostrar todas las paradas
 - [x] Crear página `/day/map` con el mapa a pantalla completa
 - [x] Navegación Lista ↔ Mapa con tabs en la parte superior
+- [x] Control nativo Mapbox `GeolocateControl` (mi ubicación, permiso solo al pulsar; `trackUserLocation`)
+- [x] Botón flotante "siguiente parada": centra el mapa en la primera parada `PENDING` por orden (`flyTo` zoom 16); deshabilitado si no hay pendientes
+- [x] Contenedor del mapa: canvas en flujo `h-full w-full` para que Mapbox reciba altura real (evitar mapa en blanco al superponer UI)
 ---
  
 ## Bloque 5 — UI: detalle de parada (~60 min)
@@ -75,11 +78,11 @@ cambiando `[ ]` por `[x]`. No marques tareas que no estén completadas y funcion
  
 ## Bloque 7 — Stretch: foto de evidencia (~30 min)
  
-- [ ] Agregar `<input type="file" accept="image/*" capture="environment">` en detalle de parada
-- [ ] Guardar imagen en `/public/uploads/` con nombre único (cuid)
-- [ ] Crear endpoint `POST /api/stops/[id]/photo` que recibe el archivo y actualiza photoUrl
-- [ ] Mostrar thumbnail de la foto si ya existe en paradas completadas
-- [ ] Solo mostrar el input de foto al marcar como COMPLETED
+- [x] Agregar `<input type="file" accept="image/*" capture="environment">` en detalle de parada
+- [x] Guardar imagen en `/public/uploads/` con nombre único (crypto.randomUUID)
+- [x] Crear endpoint `POST /api/stops/[id]/photo` que recibe el archivo y actualiza photoUrl
+- [x] Mostrar thumbnail de la foto si ya existe en paradas completadas
+- [x] Solo mostrar el input de foto al marcar como COMPLETED
 ---
  
 ## Bloque 8 — Stretch: Ops Dashboard (~45 min)
@@ -110,7 +113,7 @@ cambiando `[ ]` por `[x]`. No marques tareas que no estén completadas y funcion
 | 4 — UI: mapa | ✅ Completado |
 | 5 — UI: detalle de parada | ✅ Completado |
 | 6 — Geofencing (stretch) | ✅ Completado |
-| 7 — Foto de evidencia (stretch) | ⬜ Pendiente |
+| 7 — Foto de evidencia (stretch) | ✅ Completado |
 | 8 — Ops Dashboard (stretch) | ⬜ Pendiente |
 | 9 — Documentación | 🔄 En progreso (5/5 ítems escritos — pendiente video Loom) |
  

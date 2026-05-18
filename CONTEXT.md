@@ -53,6 +53,7 @@ de todos los técnicos del día.
   POST /api/routes/optimize     → Llama ORS, persiste orden
   GET  /api/routes/today        → Devuelve ruta del día
   PATCH /api/stops/[id]/status  → Actualiza estado + notas
+  POST /api/stops/[id]/photo    → Recibe imagen, guarda en /public/uploads/, actualiza photoUrl
   GET  /api/ops/summary         → Resumen para dashboard
        │
   ┌────┴────┐
@@ -154,10 +155,12 @@ npm run dev
 
 ## Stretch goals (opcionales)
 
-- [ ] Geofencing: check-in solo activo a <100m de la parada
-- [ ] Captura de foto como evidencia
+- [x] Geofencing: check-in solo activo a <100m de la parada (`lib/geofence.ts` + `navigator.geolocation` en `/stop/[id]`)
+- [x] Captura de foto como evidencia (`POST /api/stops/[id]/photo`, `PhotoCapture.tsx`, almacenamiento en `public/uploads/`)
 - [ ] Ops Dashboard con estado en tiempo real
 - [ ] Modo offline con sincronización posterior
+
+**Mapa (`/day/map`):** además de línea y marcadores, hay `GeolocateControl` (ubicación del técnico) y un botón que centra la vista en la siguiente parada pendiente (primera con estado `PENDING` en orden de ruta).
 
 ---
 
@@ -201,3 +204,5 @@ Eso debe verse en la UX: botones grandes, estados claros, flujos cortos.
   Endpoint: `https://api.openrouteservice.org/optimization`
 - **Geofencing**: implementar con `navigator.geolocation` + fórmula Haversine.
   No requiere ninguna API externa.
+- **Mapa y ubicación**: en `/day/map`, la ubicación del usuario puede mostrarse con el `GeolocateControl` de Mapbox (independiente del hook de geofencing en detalle de parada).
+- **Consola `manifest.json` 404**: el navegador puede pedir `/manifest.json` (PWA); si no existe el archivo en `public/`, verás 404. No afecta al mapa ni a la app.

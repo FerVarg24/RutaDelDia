@@ -152,8 +152,6 @@ intentar la migración, mucho más difícil de diagnosticar.
 
 ## Bloque 2 — API
 
-### Herramienta: Cursor (Sonnet 4.6)
-
 ---
 
 ### Bloque 2, Decisión 1 — Orden de coordenadas en OpenRouteService
@@ -217,8 +215,6 @@ re-optimizar una ruta en progreso, habría que revisar esta decisión.
 
 ## Bloque 4 — Mapa interactivo
 
-### Herramienta: Cursor (Sonnet 4.6)
-
 ---
 
 ### Bloque 4, Decisión 1 — `dynamic()` en la página, no dentro de MapView
@@ -238,8 +234,6 @@ El modelo incluyó `maxZoom: 15` en la llamada a `fitBounds`. Podría parecer un
 ---
 
 ## Bloque 5 — Detalle de parada
-
-### Herramienta: Cursor (Sonnet 4.6)
 
 ---
 
@@ -261,13 +255,39 @@ Diseñé `IncidentForm` para recibir `showError: boolean` desde la página padre
 
 ## Bloque 6 — Geofencing
 
-### Herramienta: Cursor (Sonnet 4.6)
+### Herramienta: Cursor (agente / planificación + implementación)
+
+---
+
+### Bloque 6, Problema 1 — `navigator.geolocation` no puede vivir en Server Components
+
+**Contexto:** El detalle `/stop/[id]` en App Router hay que tratarlo como Client Component (`'use client'`) donde se llame a `navigator.geolocation`. Ya estaba anticipado en la sección "Errores comunes" de esta bitácora.
+
+**Lo que hizo el modelo:** Encapsuló la API en un hook `useGeolocation` con `useEffect`, igual que otras integraciones con `window`. Sin ese aislamiento, cualquier intento de leer GPS durante SSR rompería o daría `navigator is not defined`.
+
+**Lección:** El checklist del CONTEXT.md sirve: lo que toca el navegador va en efectos del cliente, no en el árbol servidor.
 
 ---
 
 ### Bloque 6, Decisión 1 — `watchPosition` vs `getCurrentPosition`
 
-**Decisión: `watchPosition`** con `{ enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }`.
+**Sugerencia razonable del modelo / plan:** `watchPosition` con `clearWatch` en el cleanup del efecto.
+
+**Por qué la acepté:** El técnico puede abrir el detalle mientras camina hacia la parada. Con una sola lectura (`getCurrentPosition`) la distancia queda congelada; con `watchPosition` el texto de metros y el bloqueo de botones reaccionan cuando entra o sale del radio de 100m sin recargar la página. Opciones alineadas con uso en campo: `enableHighAccuracy: true`, `maximumAge: 10_000`, `timeout: 15_000` para no martillar el GPS en vacío.
+
+**Tradeoff:** Más actualizaciones y más renders que una lectura única; para 5 paradas y una pantalla a la vez es aceptable. Si en el futuro hubiera problema de batería, se podría pasar a lectura bajo demanda o aumentar `maximumAge`.
+
+---
+
+### Bloque 6, Decisión 2 — Permiso denegado o geolocalización no disponible
+
+**Qué propuso el enfoque de producto:** Si no hay ubicación confiable, no se debe poder hacer PATCH de estado (sin "modo incógnito" que anule el geofencing).
+
+**Lo que hice yo al revisarlo:** Alineado con apps de campo reales: mensaje claro en la UI (permiso, timeout, no soportado), página igualmente usable para **leer** datos de la parada, pero botones de estado y "Guardar y continuar" deshabilitados.
+
+**Error que quise evitar:** Un aviso débil que el usuario ignore y así el reto de "check-in verificado por ubicación" pierde sentido frente a quien evalúa.
+
+---
 
 El técnico camina hacia la parada mientras la página está abierta. Con `getCurrentPosition` la distancia es una foto fija del momento en que se cargó la página; con `watchPosition` el indicador actualiza en tiempo real conforme el técnico se acerca, lo que sirve de guía visual. La limpieza con `clearWatch` en el `useEffect` cleanup previene fugas de batería al salir de la página. El riesgo de re-renders excesivos se mitiga con `maximumAge: 10000` — el navegador no emite actualizaciones más frecuentes que cada ~10s si la posición no cambió significativamente.
 
@@ -275,16 +295,66 @@ El técnico camina hacia la parada mientras la página está abierta. Con `getCu
 
 ---
 
-### Bloque 6, Decisión 2 — UX cuando el permiso de ubicación es denegado
+### Bloque 6, Problema 2 — Confundí "ruta completa" con "mapa roto"
 
-**Decisión: deshabilitar acciones + mensaje instructivo. No permitir bypass.**
+**Síntoma:** En `/day/map` solo se veía el botón flotante ("Todo completado") y no el mapa; pensé que era porque todas las paradas estaban en estado distinto de `PENDING`.
 
-El geofencing existe para verificar presencia física en la parada. Permitir que el técnico registre un estado sin ubicación vacía la garantía de la feature — si el Ops Manager confía en los check-ins, necesita saber que todos fueron verificados por GPS. Se optó por bloquear las acciones de cambio de estado y mostrar un mensaje claro ("Activa el permiso en la configuración de tu navegador") en lugar de un warning que el usuario pueda ignorar.
+**Problema real:** El contenedor que Mapbox usa para el canvas quedó sin altura útil (layout con `absolute`/`flex` mal encadenados). Los datos de la ruta seguían llegando bien; el fallo era de CSS, no de la base de datos ni del estado de las paradas.
 
-**Alternativa descartada:** mostrar warning pero permitir guardar igual. Coherente con apps de campo reales (Uber, delivery apps) donde sin ubicación no hay operación.
+**Cómo lo corregí:** Volví a un patrón estable: wrapper `relative h-full w-full` y el `div` que recibe `ref` para Mapbox en flujo con `h-full w-full`, con el botón encima en `absolute`. Así el mapa siempre tiene dimensiones antes de `new mapboxgl.Map(...)`.
+
+**Lección:** Antes de achacar algo a Prisma o al seed, inspeccionar tamaño del contenedor en DevTools; Mapbox en altura 0 no siempre tira un error obvio en UI.
 
 ---
 
-### Bloque 6, Decisión 3 — HTTPS requerido en producción / dispositivo real
+### Bloque 6, Problema 3 — Consola: `manifest.json` 404
 
-`navigator.geolocation` solo funciona en contextos seguros (HTTPS o `localhost`). En desarrollo local (`npm run dev`), `localhost` funciona sin configuración adicional. Para probar en un dispositivo móvil real vía red local (IP LAN), el navegador bloqueará la geolocalización porque la conexión no es HTTPS. Solución: usar `next dev --experimental-https` o un tunnel como ngrok. Este riesgo no afecta el flujo de demo en localhost pero debe documentarse para evaluación en móvil real.
+**Lo que mostró el navegador:** `GET /manifest.json 404` en la pestaña Mapa.
+
+**Problema encontrado:** Chrome pide el manifiesto PWA aunque el proyecto no lo tenga en `public/`. No está relacionado con Mapbox ni con el geofencing.
+
+**Cómo lo traté:** Lo documenté en CONTEXT/README como ruido esperado; opcionalmente se puede añadir un `manifest.json` mínimo más adelante si molesta en la demo.
+
+---
+
+## Bloque 7 — Foto de evidencia
+
+### Herramienta: Cursor (agente / planificación + implementación)
+
+---
+
+### Bloque 7, Decisión 2 — Almacenamiento en `public/uploads/` vs. servicio externo
+
+**Opciones consideradas:** guardar las imágenes en disco local (`public/uploads/`) vs. configurar un servicio de objeto como S3 o Cloudflare R2.
+
+**Decisión: disco local.** Para un reto técnico cuyo entorno de ejecución es localhost, añadir credenciales y SDK de un servicio cloud no aporta valor demostrable. La complejidad solo añadiría fricción al setup del evaluador. Se eligió la opción más simple que cumple el requisito funcional.
+
+**Tradeoff documentado explícitamente:** en producción real, `public/uploads/` no escalaría (el filesystem del servidor no es compartido en entornos multi-instancia, y los archivos se perderían en cada redeploy). El punto de cambio es un único lugar: el endpoint `POST /api/stops/[id]/photo`, donde `writeFile` se reemplazaría por un `putObject` a S3/R2. Se dejó consignado en el README para que sea visible en la evaluación.
+
+**Seguí la decisión del plan** porque el argumento de simplicidad vs. scope del reto es correcto.
+
+---
+
+### Bloque 7, Decisión 3 — `crypto.randomUUID()` para nombre de archivo único
+
+**Sugerencia original del plan:** usar `cuid` para generar nombres únicos, consistente con el resto del schema de Prisma.
+
+**Mi decisión: `crypto.randomUUID()`.** El plan mencionaba `cuid` por consistencia con los IDs de Prisma, pero instalar una dependencia para una sola función utilitaria disponible nativamente en Node 19+ y en el runtime de Next.js 14 es innecesario. `crypto.randomUUID()` produce UUIDs v4 estándar, sin colisiones y sin dependencia extra.
+
+**Por qué lo cuestioné:** al revisar el código del endpoint, noté que el plan decía "cuid" pero la implementación ya usaba `crypto.randomUUID()`. Preferí documentar la decisión consciente: si el proyecto ya tiene `cuid` como dependencia (Prisma lo usa internamente), no habría problema en usarlo; pero exponer esa dependencia en código de aplicación sin necesidad no es correcto.
+
+---
+
+### Bloque 7, Decisión 5 — Demo Mode: variable de entorno vs. query param
+
+**Contexto:** Para la demo de presentación del reto, los botones de check-in están bloqueados si el evaluador no está físicamente en las coordenadas de las paradas de CDMX. Era necesario un mecanismo que permitiera mostrar la funcionalidad completa (incluyendo foto de evidencia) sin estar en ubicación.
+
+**Opciones evaluadas:**
+1. `NEXT_PUBLIC_DEMO_MODE=true` en `.env` — un punto de control, documentado en `.env.example`, requiere reinicio del servidor al cambiar
+2. `?demo=true` como query param en la URL — no requiere reinicio, pero es ad-hoc y más difícil de controlar y explicar
+
+**Decisión: variable de entorno.** La razón principal no es técnica sino de presentación: en el video del reto se puede mostrar el `.env`, explicar la variable y su propósito, y demostrar que el geofencing real funciona simplemente cambiando el valor. Es más honesto y más fácil de auditar que un query param que cualquiera puede añadir a la URL. El geofencing no desaparece de la UI en demo mode — los banners de distancia siguen mostrándose de forma informativa; solo se deshabilita el bloqueo de botones.
+
+**Seguí la sugerencia** porque el argumento de transparencia en la demo es correcto.
+
+---
