@@ -157,10 +157,8 @@ npm run dev
 
 - [x] Geofencing: check-in solo activo a <100m de la parada (`lib/geofence.ts` + `navigator.geolocation` en `/stop/[id]`)
 - [x] Captura de foto como evidencia (`POST /api/stops/[id]/photo`, `PhotoCapture.tsx`, almacenamiento en `public/uploads/`)
-- [ ] Ops Dashboard con estado en tiempo real
+- [x] Ops Dashboard con estado en tiempo real (`GET /api/ops/summary`, polling 10s, `/ops`)
 - [ ] Modo offline con sincronización posterior
-
-**Mapa (`/day/map`):** además de línea y marcadores, hay `GeolocateControl` (ubicación del técnico) y un botón que centra la vista en la siguiente parada pendiente (primera con estado `PENDING` en orden de ruta).
 
 ---
 

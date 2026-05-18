@@ -86,12 +86,12 @@ cambiando `[ ]` por `[x]`. No marques tareas que no estén completadas y funcion
 ---
  
 ## Bloque 8 — Stretch: Ops Dashboard (~45 min)
- 
-- [ ] Crear `GET /api/ops/summary` — devuelve todas las paradas del día agrupadas por técnico
-- [ ] Crear página `/ops` con tabla de estado de todas las paradas
-- [ ] Contadores en la parte superior: pendientes / completadas / incidentes / omitidas
-- [ ] Polling cada 10s con `useEffect` + `setInterval` para actualización en tiempo real
-- [ ] Indicador visual de "última actualización" para que el Ops Manager sepa que es live
+
+- [x] Crear `GET /api/ops/summary` — devuelve todas las paradas del día agrupadas por técnico
+- [x] Crear página `/ops` con tabla de estado de todas las paradas
+- [x] Contadores en la parte superior: pendientes / completadas / incidentes / omitidas
+- [x] Polling cada 10s con `useEffect` + `setInterval` para actualización en tiempo real
+- [x] Indicador visual de "última actualización" para que el Ops Manager sepa que es live
 ---
  
 ## Bloque 9 — Documentación (~30 min)
@@ -114,7 +114,7 @@ cambiando `[ ]` por `[x]`. No marques tareas que no estén completadas y funcion
 | 5 — UI: detalle de parada | ✅ Completado |
 | 6 — Geofencing (stretch) | ✅ Completado |
 | 7 — Foto de evidencia (stretch) | ✅ Completado |
-| 8 — Ops Dashboard (stretch) | ⬜ Pendiente |
+| 8 — Ops Dashboard (stretch) | ✅ Completado |
 | 9 — Documentación | 🔄 En progreso (5/5 ítems escritos — pendiente video Loom) |
  
 **Instrucción para Cursor:** Actualiza el emoji de la tabla al terminar cada bloque.

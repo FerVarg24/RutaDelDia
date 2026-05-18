@@ -358,3 +358,62 @@ El técnico camina hacia la parada mientras la página está abierta. Con `getCu
 **Seguí la sugerencia** porque el argumento de transparencia en la demo es correcto.
 
 ---
+
+## Bloque 8 — Ops Dashboard
+
+### Herramienta: Cursor
+
+---
+
+### Bloque 8, Decisión 1 — Polling con setInterval vs. WebSockets vs. Server-Sent Events
+
+**Opciones consideradas:**
+1. `setInterval` + `fetch` cada 10s — sin infraestructura extra, compatible con cualquier hosting
+2. WebSockets — bidireccional, latencia baja, pero requiere servidor stateful o adapter (ej. Pusher)
+3. Server-Sent Events (SSE) — unidireccional servidor → cliente, más liviano que WS pero requiere endpoint de streaming
+
+**Decisión: `setInterval` + `fetch`.** Para el alcance del reto, donde el Ops Manager necesita ver el estado actualizado cada ~10s, el polling simple cumple sin añadir infraestructura. WebSockets o SSE serían la siguiente iteración si la latencia de 10s fuera inaceptable para el cliente. La decisión se documentó explícitamente en el código.
+
+**Seguí el plan.** El argumento de simplicidad vs. scope del reto es correcto; la diferencia de UX entre 10s de polling y near-real-time (SSE/WS) no justifica la complejidad para una demo de evaluación.
+
+---
+
+### Bloque 8, Decisión 2 — Manejo de error de polling: degradación grácil vs. pantalla de error
+
+**Contexto:** Si el fetch falla durante el polling (red cortada, servidor caído), hay que decidir qué mostrar.
+
+**Opciones:**
+1. Reemplazar la tabla con un mensaje de error al primer fetch fallido
+2. Mantener el último dato válido y mostrar un indicador de "sin conexión"
+
+**Mi observación durante la revisión:** La implementación inicial reemplazaba toda la vista con un estado de error al primer fallo. Lo señalé: un Ops Manager en turno activo que pierde la red por 10 segundos no puede quedarse sin datos — necesita seguir viendo el último estado conocido mientras se reconecta. Pedí cambiar a degradación grácil.
+
+**Decisión: degradación grácil (opción 2).** El componente `LastUpdated` cambia su punto verde pulsante por un punto ámbar con el texto "Sin conexión — mostrando últimos datos". Esto es coherente con cómo operan dashboards reales (Datadog, Grafana, etc.) ante pérdida de señal.
+
+**El modelo no lo anticipó en el plan original.** Lo corregí en revisión porque el comportamiento opuesto habría sido una regresión de UX inaceptable para el caso de uso real.
+
+---
+
+### Bloque 8, Decisión 3 — Seed con segundo técnico (tech-002)
+
+**Contexto:** El seed original solo tenía `tech-001`. El plan del bloque 8 no mencionaba explícitamente la necesidad de un segundo técnico.
+
+**Mi observación:** Señalé que un dashboard con una sola fila no demuestra el valor de la vista agrupada por técnico — para la demo y para la evaluación, el Ops Manager necesita ver múltiples técnicos en paralelo. Pedí agregar `tech-002` antes de continuar con la implementación de la UI.
+
+**Decisión:** Agregar `tech-002` con 4 paradas en zonas distintas de CDMX (Reforma, Centro Histórico, Santa Fe, Nápoles). Aproveché para refactorizar el seed extrayendo la lógica repetida a una función `seedTech(techId, stops)`, lo que facilita agregar más técnicos si se necesita.
+
+**Tradeoff documentado:** Correr `npx prisma db seed` de nuevo añadirá las paradas de tech-002 sin tocar las de tech-001 (el `findFirst` por `routeId + order` previene duplicados). Si se necesita resetear, sigue siendo `prisma migrate reset`.
+
+---
+
+### Bloque 8, Decisión 4 — Desktop-first para el dashboard de Ops
+
+**Contexto:** El flujo del técnico es mobile-first (botones de 48px, pantalla completa, flujos cortos). El plan no especificaba explícitamente el enfoque de layout para `/ops`.
+
+**Mi decisión:** Pedí que el dashboard no siguiera el patrón mobile-first del flujo del técnico. El Ops Manager trabaja desde una pantalla grande — en una oficina, no caminando con el teléfono. Una tabla con 6 columnas en pantalla de 390px no tiene sentido; el técnico de campo y el Ops Manager son actores distintos con contextos de uso distintos y sus pantallas deben reflejarlo.
+
+**Implementación:** La página `/ops` usa un layout `max-w-7xl` centrado con padding responsivo, tabla con columnas que se ocultan progresivamente en pantallas pequeñas (`hidden md:table-cell`, `hidden lg:table-cell`) y grid 2×2 en móvil → 4 columnas en desktop para los contadores. Funciona en móvil con scroll pero está optimizada para pantalla ancha.
+
+**Por qué importa para la evaluación:** AROMARIA evalúa si el desarrollador pensó en el usuario real. Tratar al Ops Manager con el mismo patrón que al técnico habría sido ignorar quién usa cada pantalla y en qué contexto.
+
+---

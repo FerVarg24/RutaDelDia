@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import TabBar from './components/TabBar'
 import StopCard from './components/StopCard'
 import StopCardSkeleton from './components/StopCardSkeleton'
@@ -63,11 +64,19 @@ export default function DayPage() {
             </p>
           </div>
 
-          {!loading && route && (
-            <span className="text-sm font-medium bg-blue-50 text-blue-700 px-3 py-1 rounded-full mt-1">
-              {completedCount}/{totalCount}
-            </span>
-          )}
+          <div className="flex items-center gap-2 mt-1">
+            {!loading && route && (
+              <span className="text-sm font-medium bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
+                {completedCount}/{totalCount}
+              </span>
+            )}
+            <Link
+              href="/ops"
+              className="text-sm font-medium bg-gray-100 text-gray-600 px-3 py-1 rounded-full hover:bg-gray-200 transition-colors"
+            >
+              Ops
+            </Link>
+          </div>
         </div>
       </header>
 
