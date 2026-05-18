@@ -85,23 +85,65 @@ con los criterios de evaluación fue convincente.
 
 ---
 
-## Fase 2 — Desarrollo (por completar)
+## Fase 2 — Desarrollo con Cursor
 
-*Esta sección se llenará durante el desarrollo con Cursor.*
+### Herramienta: Cursor (Claude Sonnet 4.5)
 
-Formato a seguir para cada entrada:
+---
 
-```
-### [Bloque N] — [Descripción corta]
-**Prompt usado:** "..."
-**Lo que generó Cursor:** ...
-**Problema encontrado:** ...
-**Cómo lo corregí:** ...
-**Lección:** ...
-```
+### Bloque 1, Problema 1 — `create-next-app` rechaza el directorio
 
-Errores comunes a anticipar y documentar cuando ocurran:
+**Prompt usado:** "Inicializa el proyecto con `npx create-next-app@14 . --typescript --tailwind --app --no-src-dir`"
+
+**Lo que generó Cursor:** Ejecutó el comando tal cual. npm rechazó el nombre
+del paquete porque el directorio `RutaDelDia` tiene mayúsculas, y npm no
+permite mayúsculas en nombres de paquetes:
+`Could not create a project called "RutaDelDia" because of npm naming restrictions: name can no longer contain capital letters`
+
+**Problema encontrado:** El comando falló silenciosamente — si no hubiera
+revisado la salida del terminal, habría asumido que el proyecto se creó.
+
+**Cómo lo corregí:** Cursor adaptó y creó el scaffolding manualmente
+(package.json, tsconfig.json, tailwind.config.ts, layout.tsx, globals.css, etc.)
+en lugar de insistir con el comando. El resultado es equivalente pero con más
+control sobre cada archivo.
+
+**Lección:** Siempre revisar la salida de los comandos, especialmente los de
+scaffolding que parecen "infalibles". El nombre del directorio de trabajo es
+algo que ni yo ni el modelo anticipamos como fuente de error.
+
+---
+
+### Bloque 1, Problema 2 — Prisma 7 breaking change (el más importante)
+
+**Prompt usado:** "Instala dependencias: prisma @prisma/client mapbox-gl @types/mapbox-gl"
+
+**Lo que generó Cursor:** `npm install prisma @prisma/client`, que instaló
+Prisma 7.8.0 (última versión). Hasta aquí todo parecía normal.
+
+**Problema encontrado:** Al correr `npx prisma validate`, el schema falló con:
+`The datasource property 'url' is no longer supported in schema files.`
+
+Prisma 7 eliminó `url = env("DATABASE_URL")` del bloque `datasource` en el
+schema. Ahora requiere un archivo `prisma.config.ts` separado y cambia cómo
+se configura el cliente. Esto es un breaking change mayor que habría roto
+`prisma migrate dev` más adelante.
+
+**Cómo lo corregí:** Downgrade a Prisma 5 con `npm install prisma@^5 @prisma/client@^5`.
+El schema definido en CONTEXT.md usa la sintaxis de Prisma 4/5 y no hay razón
+para migrar a Prisma 7 dentro del alcance de este reto.
+
+**Lección:** Nunca instalar dependencias sin pinear la versión mayor cuando el
+código depende de APIs específicas. `npm install prisma` sin `@^5` es una
+bomba de tiempo. El hecho de que Cursor no pineó la versión automáticamente
+demuestra que hay que validar cada paso — `prisma validate` fue lo que salvó
+la situación. Sin esa verificación, el error habría aparecido recién al
+intentar la migración, mucho más difícil de diagnosticar.
+
+---
+
+### Errores comunes a anticipar y documentar cuando ocurran
+
 - Mapbox importado sin `dynamic` + `ssr: false` → rompe en SSR
-- PrismaClient instanciado múltiples veces → usar singleton en lib/prisma.ts
 - OpenRouteService: confundir endpoint de directions con el de optimization
 - `navigator.geolocation` llamado en Server Component → mover a Client Component
