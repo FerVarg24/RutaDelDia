@@ -44,33 +44,33 @@ cambiando `[ ]` por `[x]`. No marques tareas que no estén completadas y funcion
  
 ## Bloque 4 — UI: mapa interactivo (~60 min)
  
-- [ ] Instalar `mapbox-gl` y crear `MapView.tsx` — SIEMPRE con `dynamic import` y `ssr: false`
-- [ ] Mostrar paradas como markers numerados según su orden
-- [ ] Trazar línea de ruta entre paradas en orden
-- [ ] Centrar y ajustar el zoom automáticamente para mostrar todas las paradas
-- [ ] Crear página `/day/map` con el mapa a pantalla completa
-- [ ] Navegación Lista ↔ Mapa con tabs en la parte superior
+- [x] Instalar `mapbox-gl` y crear `MapView.tsx` — SIEMPRE con `dynamic import` y `ssr: false`
+- [x] Mostrar paradas como markers numerados según su orden
+- [x] Trazar línea de ruta entre paradas en orden
+- [x] Centrar y ajustar el zoom automáticamente para mostrar todas las paradas
+- [x] Crear página `/day/map` con el mapa a pantalla completa
+- [x] Navegación Lista ↔ Mapa con tabs en la parte superior
 ---
  
 ## Bloque 5 — UI: detalle de parada (~60 min)
  
-- [ ] Crear página `/stop/[id]` con nombre, dirección y estado actual de la parada
-- [ ] Crear componente `StatusButtons.tsx` con botones: Completada / Con incidente / Omitida
-- [ ] Crear componente `IncidentForm.tsx` con campo de nota obligatoria al elegir INCIDENT
-- [ ] Llamar `PATCH /api/stops/[id]/status` al confirmar cualquier estado
-- [ ] Mostrar campo de notas opcionales para COMPLETED y SKIPPED
-- [ ] Regresar a `/day` después de guardar y reflejar el estado actualizado
-- [ ] Botones con altura mínima de 48px (h-12) para uso con el dedo
+- [x] Crear página `/stop/[id]` con nombre, dirección y estado actual de la parada
+- [x] Crear componente `StatusButtons.tsx` con botones: Completada / Con incidente / Omitida
+- [x] Crear componente `IncidentForm.tsx` con campo de nota obligatoria al elegir INCIDENT
+- [x] Llamar `PATCH /api/stops/[id]/status` al confirmar cualquier estado
+- [x] Mostrar campo de notas opcionales para COMPLETED y SKIPPED
+- [x] Regresar a `/day` después de guardar y reflejar el estado actualizado
+- [x] Botones con altura mínima de 48px (h-12) para uso con el dedo
 ---
  
 ## Bloque 6 — Stretch: geofencing (~45 min)
  
-- [ ] Crear `lib/geofence.ts` con fórmula Haversine para calcular distancia entre dos coordenadas
-- [ ] En `/stop/[id]` obtener posición del usuario con `navigator.geolocation`
-- [ ] Deshabilitar botones de acción si la distancia a la parada es mayor a 100m
-- [ ] Mostrar distancia actual en texto ("Estás a 340m de esta parada")
-- [ ] Manejar caso donde el usuario niega permisos de ubicación
-- [ ] Manejar caso donde el navegador no soporta geolocation
+- [x] Crear `lib/geofence.ts` con fórmula Haversine para calcular distancia entre dos coordenadas
+- [x] En `/stop/[id]` obtener posición del usuario con `navigator.geolocation`
+- [x] Deshabilitar botones de acción si la distancia a la parada es mayor a 100m
+- [x] Mostrar distancia actual en texto ("Estás a 340m de esta parada")
+- [x] Manejar caso donde el usuario niega permisos de ubicación
+- [x] Manejar caso donde el navegador no soporta geolocation
 ---
  
 ## Bloque 7 — Stretch: foto de evidencia (~30 min)
@@ -96,8 +96,8 @@ cambiando `[ ]` por `[x]`. No marques tareas que no estén completadas y funcion
 - [x] Escribir `README.md` con instrucciones completas para correr localmente
 - [x] Sección de decisiones técnicas justificadas en README
 - [x] Sección "qué dejé pendiente y qué haría con más tiempo" en README (documento vivo, se actualiza al avanzar)
-- [ ] Completar `AI_LOG.md` con todas las entradas de la fase de desarrollo
-- [ ] Revisar que `CONTEXT.md` refleje el estado final del proyecto
+- [x] Completar `AI_LOG.md` con todas las entradas de la fase de desarrollo
+- [x] Revisar que `CONTEXT.md` refleje el estado final del proyecto
 ---
  
 ## Resumen de progreso
@@ -107,12 +107,12 @@ cambiando `[ ]` por `[x]`. No marques tareas que no estén completadas y funcion
 | 1 — Setup inicial | ✅ Completado |
 | 2 — API | 🔄 En progreso (5/6 — falta prueba manual de endpoints) |
 | 3 — UI: lista de paradas | ✅ Completado |
-| 4 — UI: mapa | ⬜ Pendiente |
-| 5 — UI: detalle de parada | ⬜ Pendiente |
-| 6 — Geofencing (stretch) | ⬜ Pendiente |
+| 4 — UI: mapa | ✅ Completado |
+| 5 — UI: detalle de parada | ✅ Completado |
+| 6 — Geofencing (stretch) | ✅ Completado |
 | 7 — Foto de evidencia (stretch) | ⬜ Pendiente |
 | 8 — Ops Dashboard (stretch) | ⬜ Pendiente |
-| 9 — Documentación | 🔄 En progreso (3/5 ítems — README completo, AI_LOG y CONTEXT.md al final) |
+| 9 — Documentación | 🔄 En progreso (5/5 ítems escritos — pendiente video Loom) |
  
 **Instrucción para Cursor:** Actualiza el emoji de la tabla al terminar cada bloque.
 ⬜ Pendiente → 🔄 En progreso → ✅ Completado

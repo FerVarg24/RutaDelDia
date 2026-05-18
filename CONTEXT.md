@@ -148,8 +148,8 @@ npm run dev
 - [x] Endpoint que recibe paradas y devuelve ruta optimizada
 - [x] Persistencia de estado por parada (PENDING / COMPLETED / INCIDENT / SKIPPED)
 - [x] Lista de paradas en orden optimizado
-- [ ] Mapa con ruta y paradas numeradas
-- [ ] Detalle de parada con botones de estado y campo de notas
+- [x] Mapa con ruta y paradas numeradas
+- [x] Detalle de parada con botones de estado y campo de notas
 - [x] Nota obligatoria al marcar "con incidente"
 
 ## Stretch goals (opcionales)

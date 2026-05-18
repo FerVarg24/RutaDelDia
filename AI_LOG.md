@@ -212,3 +212,79 @@ re-optimizar una ruta en progreso, habría que revisar esta decisión.
 - `GET /api/routes/today` → ✅ Probado y funcionando. Devuelve ruta con 5 paradas ordenadas e Incidents incluidos.
 - `PATCH /api/stops/[id]/status` → ✅ Probado con COMPLETED y con INCIDENT (description obligatoria validada).
 - `POST /api/routes/optimize` → ⏳ Pendiente de probar con OPENROUTESERVICE_KEY activa.
+
+---
+
+## Bloque 4 — Mapa interactivo
+
+### Herramienta: Cursor (Sonnet 4.6)
+
+---
+
+### Bloque 4, Decisión 1 — `dynamic()` en la página, no dentro de MapView
+
+El modelo puso el `dynamic(() => import('../components/MapView'), { ssr: false })` en la página `/day/map/page.tsx`, no dentro del propio `MapView.tsx`. Lo validé antes de aceptar: es la forma correcta. Si `MapView` se encargara de su propio dynamic import, el componente no podría importarse directamente en otros contextos (tests, otras páginas con distinta estrategia). El `ssr: false` es responsabilidad del consumidor, no del componente.
+
+**Seguí la sugerencia** porque la separación de responsabilidades es correcta.
+
+---
+
+### Bloque 4, Decisión 2 — `fitBounds` con `maxZoom: 15`
+
+El modelo incluyó `maxZoom: 15` en la llamada a `fitBounds`. Podría parecer un detalle menor, pero sin ese límite, si dos paradas estuvieran muy cerca (mismo edificio, mismo predio), Mapbox haría un zoom tan extremo que el mapa perdería contexto de navegación.
+
+**Seguí la sugerencia.** Es el tipo de caso edge que se descubre probando con datos reales y que el modelo anticipó correctamente.
+
+---
+
+## Bloque 5 — Detalle de parada
+
+### Herramienta: Cursor (Sonnet 4.6)
+
+---
+
+### Bloque 5, Decisión 1 — Reutilizar `GET /api/routes/today` vs. crear `GET /api/stops/[id]`
+
+El plan propuso fetchear la ruta completa del día y filtrar por `id` en el cliente, en lugar de crear un endpoint `GET /api/stops/[id]`. El tradeoff es real: la página trae todos los datos de la ruta para encontrar una sola parada. Acepté la decisión con conciencia: para 5 paradas en un demo local, la simplicidad gana. En producción con rutas de 30-50 paradas, el endpoint dedicado sería necesario. Lo dejé documentado en el código con un comentario.
+
+**Seguí la sugerencia** pero reconociendo el límite explícitamente, no ciegamente.
+
+---
+
+### Bloque 5, Decisión 2 — `showError` como prop en IncidentForm
+
+Diseñé `IncidentForm` para recibir `showError: boolean` desde la página padre en lugar de manejar el estado de error internamente. El modelo lo propuso así. La razón es correcta: el error de "descripción vacía" solo debe mostrarse cuando el usuario intenta confirmar, no mientras escribe. Si el componente manejara su propio estado de error, podría activarse demasiado pronto. El control del error en el padre garantiza que aparece solo cuando es accionable.
+
+**Seguí la sugerencia** porque la decisión tiene una justificación de UX clara.
+
+---
+
+## Bloque 6 — Geofencing
+
+### Herramienta: Cursor (Sonnet 4.6)
+
+---
+
+### Bloque 6, Decisión 1 — `watchPosition` vs `getCurrentPosition`
+
+**Decisión: `watchPosition`** con `{ enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }`.
+
+El técnico camina hacia la parada mientras la página está abierta. Con `getCurrentPosition` la distancia es una foto fija del momento en que se cargó la página; con `watchPosition` el indicador actualiza en tiempo real conforme el técnico se acerca, lo que sirve de guía visual. La limpieza con `clearWatch` en el `useEffect` cleanup previene fugas de batería al salir de la página. El riesgo de re-renders excesivos se mitiga con `maximumAge: 10000` — el navegador no emite actualizaciones más frecuentes que cada ~10s si la posición no cambió significativamente.
+
+**Alternativa descartada:** `getCurrentPosition` + botón "Actualizar ubicación". Añade fricción innecesaria en el flujo del técnico y no aporta garantía extra de presencia física.
+
+---
+
+### Bloque 6, Decisión 2 — UX cuando el permiso de ubicación es denegado
+
+**Decisión: deshabilitar acciones + mensaje instructivo. No permitir bypass.**
+
+El geofencing existe para verificar presencia física en la parada. Permitir que el técnico registre un estado sin ubicación vacía la garantía de la feature — si el Ops Manager confía en los check-ins, necesita saber que todos fueron verificados por GPS. Se optó por bloquear las acciones de cambio de estado y mostrar un mensaje claro ("Activa el permiso en la configuración de tu navegador") en lugar de un warning que el usuario pueda ignorar.
+
+**Alternativa descartada:** mostrar warning pero permitir guardar igual. Coherente con apps de campo reales (Uber, delivery apps) donde sin ubicación no hay operación.
+
+---
+
+### Bloque 6, Decisión 3 — HTTPS requerido en producción / dispositivo real
+
+`navigator.geolocation` solo funciona en contextos seguros (HTTPS o `localhost`). En desarrollo local (`npm run dev`), `localhost` funciona sin configuración adicional. Para probar en un dispositivo móvil real vía red local (IP LAN), el navegador bloqueará la geolocalización porque la conexión no es HTTPS. Solución: usar `next dev --experimental-https` o un tunnel como ngrok. Este riesgo no afecta el flujo de demo en localhost pero debe documentarse para evaluación en móvil real.

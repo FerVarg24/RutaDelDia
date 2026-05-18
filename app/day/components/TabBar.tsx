@@ -18,13 +18,16 @@ export default function TabBar({ activeTab }: TabBarProps) {
         Lista
       </Link>
 
-      {/* Mapa: deshabilitado hasta Bloque 4 */}
-      <span
-        className="flex-1 flex items-center justify-center h-12 text-sm font-medium text-gray-300 cursor-not-allowed"
-        aria-disabled="true"
+      <Link
+        href="/day/map"
+        className={`flex-1 flex items-center justify-center h-12 text-sm font-medium transition-colors ${
+          activeTab === 'map'
+            ? 'text-blue-600 border-b-2 border-blue-600'
+            : 'text-gray-500'
+        }`}
       >
         Mapa
-      </span>
+      </Link>
     </div>
   )
 }
